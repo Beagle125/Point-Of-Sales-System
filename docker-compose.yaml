@@ -14,7 +14,4 @@ services:
     ports:
       - "3306:3306"
     volumes:
-      - pos_mysql:/var/lib/mysql
-
-  volumes:
-    pos_mysql:
+      - ./pos-db/db-files:/var/lib/mysql
