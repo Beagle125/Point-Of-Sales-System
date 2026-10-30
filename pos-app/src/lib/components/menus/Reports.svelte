@@ -1,5 +1,10 @@
 <!-- Button Info -->
 <script module lang="ts">
+    import LocationRevenue from "../reports/LocationRevenue.svelte";
+	import ProductRevenue from "../reports/ProductRevenue.svelte";
+	import QtyPerProduct from "../reports/QtyPerProduct.svelte";
+	import Transactions from "../reports/Transactions.svelte";
+    
     export const icon = "/reports.jpg";
     export const text = "Reports";
 </script>
@@ -8,4 +13,7 @@
     // ...
 </script>
 
-test 2
+<LocationRevenue />
+<ProductRevenue />
+<QtyPerProduct />
+<Transactions />

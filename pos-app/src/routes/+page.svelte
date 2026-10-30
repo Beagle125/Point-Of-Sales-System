@@ -1,6 +1,5 @@
 <script lang="ts">
-	import { goto } from "$app/navigation";
-	import { type Component, onMount } from "svelte";
+	import { type Component, } from "svelte";
 
     interface MenuModule {
         icon: string;
@@ -27,10 +26,10 @@
 
 <div class="min-h-svh min-w-svw flex flex-col">
     <!-- Top Bar Navigation-->
-    <div class="flex flex-1 max-h-30 bg-secondary-300 justify-center items-center">
+    <div class="flex flex-1 max-h-30 bg-surface-100 dark:bg-surface-900 justify-center items-center">
         <div class="min-h-full flex flex-row gap-2 p-4">
             {#each menus as menu}
-                <button class="btn aspect-square preset-filled-secondary-100-900 flex flex-col items-center justify-center" onclick={() => {CurrentMenu = menu.component; console.log($state.snapshot(CurrentMenu))}}>
+                <button class="btn aspect-square bg-surface-200 dark:bg-primary-500/50 flex flex-col items-center justify-center" onclick={() => {CurrentMenu = menu.component;}}>
                     <div class="flex flex-col">
                         <img src={menu.icon} alt={menu.text}/>
                         {menu.text}
@@ -41,7 +40,7 @@
     </div>
 
     <!-- Main Content -->
-    <div class="flex-2 bg-primary-500 p-4">
+    <div class="flex-2 bg-surface-50 dark:bg-surface-950 p-4">
         <CurrentMenu />
     </div>
 </div>

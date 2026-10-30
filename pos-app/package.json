@@ -49,6 +49,7 @@
 		"#lib/*": "./src/lib/*"
 	},
 	"dependencies": {
+		"@fontsource/fira-sans": "^5.3.0",
 		"@sveltejs/adapter-node": "^6.0.0"
 	}
 }
