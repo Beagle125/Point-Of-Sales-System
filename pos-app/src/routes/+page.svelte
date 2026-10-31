@@ -29,7 +29,7 @@
     <div class="flex flex-1 max-h-30 bg-surface-100 dark:bg-surface-900 justify-center items-center">
         <div class="min-h-full flex flex-row gap-2 p-4">
             {#each menus as menu}
-                <button class="btn aspect-square bg-surface-200 dark:bg-primary-500/50 flex flex-col items-center justify-center" onclick={() => {CurrentMenu = menu.component;}}>
+                <button class="btn flex-1 aspect-square bg-surface-200 dark:bg-primary-500/50 flex flex-col items-center justify-center" onclick={() => {CurrentMenu = menu.component;}}>
                     <div class="flex flex-col">
                         <img src={menu.icon} alt={menu.text}/>
                         {menu.text}
