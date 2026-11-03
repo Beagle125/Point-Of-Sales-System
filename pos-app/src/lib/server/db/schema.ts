@@ -1,16 +1,87 @@
-import { mysqlTable, int, decimal, mysqlEnum, datetime } from 'drizzle-orm/mysql-core';
+import { primaryKey } from 'drizzle-orm/mysql-core';
+import { mysqlTable, int, decimal, mysqlEnum, datetime, varchar } from 'drizzle-orm/mysql-core';
 
-// Orders Table
+// products Table
+export const products = mysqlTable('products', {
+	product_id: int('product_id').primaryKey().autoincrement().notNull(),
+	name: varchar('name', { length: 256 }).notNull(),
+	unit_price: decimal('unit_price', { precision: 19, scale: 4 }).notNull()
+});
+
+// orders Table
 export const orders = mysqlTable('orders', {
-	order_id: int('order_id').primaryKey(),
-	location_id: int('location_id'),
-	order_date: datetime('order_date'),
-})
+	order_id: int('order_id').primaryKey().autoincrement().notNull(),
+	location_id: int('location_id')
+		.references(() => locations.location_id)
+		.notNull(),
+	order_date: datetime('order_date').notNull()
+});
 
-// Payments Table
+// payments Table
 export const payments = mysqlTable('payments', {
-	payment_id: int('payment_id').primaryKey(),
-	order_id: int('order_id').references(() => orders.order_id, { onDelete: 'cascade', onUpdate: 'cascade' }), 
-	amount: decimal('amount'),
-	transaction_type: mysqlEnum('transaction_type', ["e-wallet", "cash", "card"])
-})
+	payment_id: int('payment_id').primaryKey().autoincrement().notNull(),
+	order_id: int('order_id')
+		.references(() => orders.order_id, {
+			onDelete: 'cascade',
+			onUpdate: 'cascade'
+		})
+		.notNull(),
+	amount: decimal('amount', { precision: 19, scale: 4 }).notNull(),
+	transaction_type: mysqlEnum('transaction_type', ['e-wallet', 'cash', 'card']).notNull()
+});
+
+// ingredients Table
+export const ingredients = mysqlTable('ingredients', {
+	ingredient_id: int('ingredient_id').primaryKey().autoincrement().notNull(),
+	name: varchar('name', { length: 256 }).notNull()
+});
+
+// locations Table
+export const locations = mysqlTable('locations', {
+	location_id: int('location_id').primaryKey().autoincrement().notNull(),
+	name: varchar('name', { length: 256 }).notNull(),
+	street: varchar('street', { length: 256 }).notNull(),
+	city: varchar('city', { length: 256 }).notNull()
+});
+
+// JUNCTION TABLES
+
+// product_ingredients Table
+export const product_ingredients = mysqlTable(
+	'product_ingredients',
+	{
+		product_id: int('product_id')
+			.references(() => products.product_id)
+			.notNull(),
+		ingredient_id: int('ingredient_id')
+			.references(() => ingredients.ingredient_id)
+			.notNull()
+	},
+	(table) => {
+		return {
+			pk: primaryKey({ columns: [table.product_id, table.ingredient_id] })
+		};
+	}
+);
+
+// product_ingredients Table
+export const product_orders = mysqlTable(
+	'product_orders',
+	{
+		product_id: int('product_id')
+			.references(() => products.product_id)
+			.notNull(),
+		order_id: int('order_id')
+			.references(() => orders.order_id)
+			.notNull(),
+		quantity: int('quantity').notNull(),
+		unit_price: decimal('unit_price', { precision: 19, scale: 4 }).notNull()
+	},
+	(table) => {
+		return {
+			pk: primaryKey({ columns: [table.product_id, table.order_id] })
+		};
+	}
+);
+
+// RELATIONS (TODO)
