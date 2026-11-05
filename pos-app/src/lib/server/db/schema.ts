@@ -1,5 +1,12 @@
-import { primaryKey } from 'drizzle-orm/mysql-core';
-import { mysqlTable, int, decimal, mysqlEnum, datetime, varchar } from 'drizzle-orm/mysql-core';
+import {
+	primaryKey,
+	mysqlTable,
+	int,
+	decimal,
+	mysqlEnum,
+	datetime,
+	varchar
+} from 'drizzle-orm/mysql-core';
 
 // products Table
 export const products = mysqlTable('products', {
@@ -57,11 +64,7 @@ export const product_ingredients = mysqlTable(
 			.references(() => ingredients.ingredient_id)
 			.notNull()
 	},
-	(table) => {
-		return {
-			pk: primaryKey({ columns: [table.product_id, table.ingredient_id] })
-		};
-	}
+	(table) => [primaryKey({ columns: [table.product_id, table.ingredient_id] })]
 );
 
 // product_ingredients Table
@@ -77,11 +80,7 @@ export const product_orders = mysqlTable(
 		quantity: int('quantity').notNull(),
 		unit_price: decimal('unit_price', { precision: 19, scale: 4 }).notNull()
 	},
-	(table) => {
-		return {
-			pk: primaryKey({ columns: [table.product_id, table.order_id] })
-		};
-	}
+	(table) => [primaryKey({ columns: [table.product_id, table.order_id] })]
 );
 
 // RELATIONS (TODO)
