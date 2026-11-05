@@ -35,16 +35,16 @@ export const POST: RequestHandler = async ({ request }) => {
 		return json({ error: 'Request body must be a valid JSON.' }, { status: 415 });
 	}
 
+	// ajv validation
+	if (!validate(body)) {
+		return json({ error: validate.errors }, { status: 415 });
+	}
+
 	// validate if a product already has the same name
 	if (await db.query.products.findFirst({ where: eq(products.name, body.name) })) {
 		return json({ error: 'Product name already exists' }, { status: 415 });
 	}
 
-	// ajv validation
-	if (validate(body)) {
-		await db.insert(products).values({ name: body.name, unit_price: body.unit_price });
-		return json({ success: true }, { status: 201 });
-	} else {
-		return json({ error: validate.errors }, { status: 415 });
-	}
+	await db.insert(products).values({ name: body.name, unit_price: body.unit_price });
+	return json({ success: true }, { status: 201 });
 };
