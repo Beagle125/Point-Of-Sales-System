@@ -7,6 +7,10 @@ import Ajv from 'ajv';
 import type { JSONSchemaType } from 'ajv';
 import { eq } from 'drizzle-orm';
 
+/*
+TODO:
+1. junction table cascading
+*/
 export const DELETE: RequestHandler = async ({ params }) => {
 	const productId = Number(params.id);
 	if (!Number.isInteger(productId) || productId <= 0) {
@@ -26,6 +30,10 @@ export const DELETE: RequestHandler = async ({ params }) => {
 	return json({ success: true });
 };
 
+/*
+TODO:
+1. Ingredients updating feature
+*/
 export const PUT: RequestHandler = async ({ params, request }) => {
 	let body: unknown;
 

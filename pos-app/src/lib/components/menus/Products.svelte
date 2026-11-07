@@ -79,6 +79,21 @@
 
 		form.reset();
 	}
+
+	async function getProduct(event: SubmitEvent) {
+		event.preventDefault();
+		const response = await fetch('/api/products', {
+			method: 'GET'
+		});
+
+		const result = await response.json();
+		console.log(result);
+
+		if (!response.ok) {
+			// Show bad stuff here...
+			return;
+		}
+	}
 </script>
 
 <form method="POST" onsubmit={createProduct}>
@@ -115,4 +130,8 @@
 		<input type="number" name="unit_price" min="0" step="0.0001" required />
 	</label>
 	<button type="submit">update product</button>
+</form>
+
+<form action="GET" onsubmit={getProduct}>
+	<button type="submit">Get Products</button>
 </form>

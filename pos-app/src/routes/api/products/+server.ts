@@ -7,6 +7,10 @@ import Ajv from 'ajv';
 import type { JSONSchemaType } from 'ajv';
 import { eq } from 'drizzle-orm';
 
+/*
+TODO:
+1. Ingredients adding feature
+*/
 export const POST: RequestHandler = async ({ request }) => {
 	let body: unknown;
 	const ajv = new Ajv();
@@ -47,4 +51,16 @@ export const POST: RequestHandler = async ({ request }) => {
 
 	await db.insert(products).values({ name: body.name, unit_price: body.unit_price });
 	return json({ success: true }, { status: 201 });
+};
+
+/*
+TODO: Filter via ingredients
+*/
+export const GET: RequestHandler = async ({ url }) => {
+	try {
+		const result = await db.select().from(products);
+		return json({ status: 'success', data: result });
+	} catch (error) {
+		return json({ status: 'error', message: 'failed to get the products' }, { status: 500 });
+	}
 };
