@@ -1,16 +1,13 @@
 import { db } from '#lib/server/db/index.ts';
-import { products } from '#lib/server/db/schema.ts';
+import { products, product_ingredients } from '#lib/server/db/schema.ts';
 
 import type { RequestHandler } from '@sveltejs/kit';
 import { json } from '@sveltejs/kit';
 import Ajv from 'ajv';
 import type { JSONSchemaType } from 'ajv';
-import { eq } from 'drizzle-orm';
+import { create } from 'domain';
+import { eq, inArray } from 'drizzle-orm';
 
-/*
-TODO:
-1. Ingredients adding feature
-*/
 export const POST: RequestHandler = async ({ request }) => {
 	let body: unknown;
 	const ajv = new Ajv();
@@ -18,13 +15,20 @@ export const POST: RequestHandler = async ({ request }) => {
 	interface MyData {
 		name: string;
 		unit_price: string;
+		ingredients?: number[];
 	}
 
 	const schema: JSONSchemaType<MyData> = {
 		type: 'object',
 		properties: {
 			name: { type: 'string', pattern: '^(?!\\s*$).+' },
-			unit_price: { type: 'string', pattern: '^(?!\\s*$).+' }
+			unit_price: { type: 'string', pattern: '^(?!\\s*$).+' },
+
+			ingredients: {
+				type: 'array',
+				nullable: true,
+				items: { type: 'number' }
+			}
 		},
 		required: ['name', 'unit_price'],
 		additionalProperties: false
@@ -35,6 +39,7 @@ export const POST: RequestHandler = async ({ request }) => {
 	// initial validation of valid json
 	try {
 		body = await request.json();
+		console.log(body);
 	} catch {
 		return json({ error: 'Request body must be a valid JSON.' }, { status: 415 });
 	}
@@ -49,16 +54,64 @@ export const POST: RequestHandler = async ({ request }) => {
 		return json({ error: 'Product name already exists' }, { status: 415 });
 	}
 
-	await db.insert(products).values({ name: body.name, unit_price: body.unit_price });
+	const [created] = await db
+		.insert(products)
+		.values({ name: body.name, unit_price: body.unit_price })
+		.$returningId();
+
+	// update the product_ingredients junction table
+	if (body.ingredients && body.ingredients?.length > 0) {
+		let ingredient_arr: number[] = body.ingredients;
+		await db.insert(product_ingredients).values(
+			ingredient_arr.map((ingredient_id) => ({
+				product_id: created.product_id,
+				ingredient_id: ingredient_id
+			}))
+		);
+	}
 	return json({ success: true }, { status: 201 });
 };
 
-/*
-TODO: Filter via ingredients
-*/
-export const GET: RequestHandler = async ({ url }) => {
+export const QUERY: RequestHandler = async ({ url, request }) => {
 	try {
-		const result = await db.select().from(products);
+		let body: unknown;
+		const ajv = new Ajv();
+		interface MyData {
+			ingredients?: number[];
+		}
+
+		const schema: JSONSchemaType<MyData> = {
+			type: 'object',
+			properties: {
+				ingredients: {
+					type: 'array',
+					nullable: true,
+					items: { type: 'number' }
+				}
+			},
+			additionalProperties: false
+		};
+
+		const validate = ajv.compile(schema);
+		let result;
+		body = await request.json();
+
+		// ajv validation
+		if (!validate(body)) {
+			return json({ error: validate.errors }, { status: 415 });
+		}
+
+		if (body.ingredients && body.ingredients?.length > 0) {
+			let ingredient_arr: number[] = body.ingredients;
+			result = await db
+				.select()
+				.from(products)
+				.leftJoin(product_ingredients, eq(products.product_id, product_ingredients.product_id))
+				.where(inArray(product_ingredients.ingredient_id, ingredient_arr));
+		} else {
+			result = await db.select().from(products);
+		}
+
 		return json({ status: 'success', data: result });
 	} catch (error) {
 		return json({ status: 'error', message: 'failed to get the products' }, { status: 500 });

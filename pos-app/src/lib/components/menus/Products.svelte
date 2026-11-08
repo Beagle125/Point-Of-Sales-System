@@ -5,6 +5,20 @@
 </script>
 
 <script lang="ts">
+	import { onMount } from 'svelte';
+
+	interface Ingredient {
+		ingredient_id: number;
+		name: string;
+	}
+
+	let ingredient_list: Ingredient[] = $state([]);
+
+	onMount(async () => {
+		let response = await fetch('/api/ingredients', { method: 'GET' });
+		ingredient_list = (await response.json()).data;
+	});
+
 	async function createProduct(event: SubmitEvent) {
 		event.preventDefault();
 
@@ -16,7 +30,8 @@
 			headers: { 'Content-Type': 'application/json' },
 			body: JSON.stringify({
 				name: data.get('name'),
-				unit_price: data.get('unit_price')
+				unit_price: data.get('unit_price'),
+				ingredients: data.getAll('ingredients[]').map(Number)
 			})
 		});
 
@@ -65,7 +80,8 @@
 			headers: { 'Content-Type': 'application/json' },
 			body: JSON.stringify({
 				name: data.get('name'),
-				unit_price: data.get('unit_price')
+				unit_price: data.get('unit_price'),
+				ingredients: data.getAll('ingredients[]').map(Number)
 			})
 		});
 
@@ -82,8 +98,16 @@
 
 	async function getProduct(event: SubmitEvent) {
 		event.preventDefault();
+
+		const form = event.currentTarget as HTMLFormElement;
+		const data = new FormData(form);
+
 		const response = await fetch('/api/products', {
-			method: 'GET'
+			method: 'QUERY',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({
+				ingredients: data.getAll('ingredients[]').map(Number)
+			})
 		});
 
 		const result = await response.json();
@@ -93,6 +117,8 @@
 			// Show bad stuff here...
 			return;
 		}
+
+		form.reset();
 	}
 </script>
 
@@ -105,6 +131,16 @@
 		Unit price
 		<input type="number" name="unit_price" min="0" step="0.0001" required />
 	</label>
+	<fieldsets>
+		<legend>Select Ingredients</legend>
+		<!--Loop ingredients-->
+		{#each ingredient_list as ingredient}
+			<label>
+				<input type="checkbox" name="ingredients[]" value={ingredient.ingredient_id} />
+				{ingredient.name}
+			</label>
+		{/each}
+	</fieldsets>
 	<button type="submit">Create product</button>
 </form>
 
@@ -129,9 +165,25 @@
 		New Unit price
 		<input type="number" name="unit_price" min="0" step="0.0001" required />
 	</label>
+	<fieldsets>
+		<legend>Select Ingredients</legend>
+		<!--Loop ingredients-->
+		{#each ingredient_list as ingredient}
+			<label>
+				<input type="checkbox" name="ingredients[]" value={ingredient.ingredient_id} />
+				{ingredient.name}
+			</label>
+		{/each}
+	</fieldsets>
 	<button type="submit">update product</button>
 </form>
 
-<form action="GET" onsubmit={getProduct}>
+<form action="QUERY" onsubmit={getProduct}>
+	{#each ingredient_list as ingredient}
+		<label>
+			<input type="checkbox" name="ingredients[]" value={ingredient.ingredient_id} />
+			{ingredient.name}
+		</label>
+	{/each}
 	<button type="submit">Get Products</button>
 </form>

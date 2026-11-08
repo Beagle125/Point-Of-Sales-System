@@ -58,10 +58,10 @@ export const product_ingredients = mysqlTable(
 	'product_ingredients',
 	{
 		product_id: int('product_id')
-			.references(() => products.product_id)
+			.references(() => products.product_id, { onDelete: 'cascade', onUpdate: 'cascade' })
 			.notNull(),
 		ingredient_id: int('ingredient_id')
-			.references(() => ingredients.ingredient_id)
+			.references(() => ingredients.ingredient_id, { onDelete: 'cascade', onUpdate: 'cascade' })
 			.notNull()
 	},
 	(table) => [primaryKey({ columns: [table.product_id, table.ingredient_id] })]
@@ -72,10 +72,10 @@ export const product_orders = mysqlTable(
 	'product_orders',
 	{
 		product_id: int('product_id')
-			.references(() => products.product_id)
+			.references(() => products.product_id, { onDelete: 'cascade', onUpdate: 'cascade' })
 			.notNull(),
 		order_id: int('order_id')
-			.references(() => orders.order_id)
+			.references(() => orders.order_id, { onDelete: 'cascade', onUpdate: 'cascade' })
 			.notNull(),
 		quantity: int('quantity').notNull(),
 		unit_price: decimal('unit_price', { precision: 19, scale: 4 }).notNull()

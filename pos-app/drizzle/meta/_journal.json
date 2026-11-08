@@ -8,6 +8,20 @@
       "when": 1793681106359,
       "tag": "0000_steep_shatterstar",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "5",
+      "when": 1794118557585,
+      "tag": "0001_military_valeria_richards",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "5",
+      "when": 1794119026007,
+      "tag": "0002_public_titania",
+      "breakpoints": true
     }
   ]
 }

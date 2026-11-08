@@ -1,5 +1,5 @@
 import { db } from '#lib/server/db/index.ts';
-import { products } from '#lib/server/db/schema.ts';
+import { products, product_ingredients } from '#lib/server/db/schema.ts';
 
 import type { RequestHandler } from '@sveltejs/kit';
 import { json } from '@sveltejs/kit';
@@ -7,10 +7,6 @@ import Ajv from 'ajv';
 import type { JSONSchemaType } from 'ajv';
 import { eq } from 'drizzle-orm';
 
-/*
-TODO:
-1. junction table cascading
-*/
 export const DELETE: RequestHandler = async ({ params }) => {
 	const productId = Number(params.id);
 	if (!Number.isInteger(productId) || productId <= 0) {
@@ -30,10 +26,6 @@ export const DELETE: RequestHandler = async ({ params }) => {
 	return json({ success: true });
 };
 
-/*
-TODO:
-1. Ingredients updating feature
-*/
 export const PUT: RequestHandler = async ({ params, request }) => {
 	let body: unknown;
 
@@ -42,13 +34,20 @@ export const PUT: RequestHandler = async ({ params, request }) => {
 	interface MyData {
 		name: string;
 		unit_price: string;
+		ingredients?: number[];
 	}
 
 	const schema: JSONSchemaType<MyData> = {
 		type: 'object',
 		properties: {
 			name: { type: 'string', pattern: '^(?!\\s*$).+' },
-			unit_price: { type: 'string', pattern: '^(?!\\s*$).+' }
+			unit_price: { type: 'string', pattern: '^(?!\\s*$).+' },
+
+			ingredients: {
+				type: 'array',
+				nullable: true,
+				items: { type: 'number' }
+			}
 		},
 		required: ['name', 'unit_price'],
 		additionalProperties: false
@@ -68,11 +67,6 @@ export const PUT: RequestHandler = async ({ params, request }) => {
 		return json({ error: validate.errors }, { status: 415 });
 	}
 
-	// validate if a product already has the same name
-	if (await db.query.products.findFirst({ where: eq(products.name, body.name) })) {
-		return json({ error: 'Product name already exists' }, { status: 415 });
-	}
-
 	// update the product
 	const productId = Number(params.id);
 
@@ -80,6 +74,21 @@ export const PUT: RequestHandler = async ({ params, request }) => {
 		.update(products)
 		.set({ name: body.name, unit_price: body.unit_price })
 		.where(eq(products.product_id, productId));
+
+	if (body.ingredients) {
+		let ingredient_arr: number[] = body.ingredients;
+
+		// delete existing records
+		await db.delete(product_ingredients).where(eq(product_ingredients.product_id, productId));
+
+		//  update records
+		await db.insert(product_ingredients).values(
+			ingredient_arr.map((ingredient_id) => ({
+				product_id: productId,
+				ingredient_id: ingredient_id
+			}))
+		);
+	}
 
 	return json({ success: true }, { status: 201 });
 };
