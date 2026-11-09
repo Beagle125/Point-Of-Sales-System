@@ -34,7 +34,8 @@ export const payments = mysqlTable('payments', {
 		})
 		.notNull(),
 	amount: decimal('amount', { precision: 19, scale: 4 }).notNull(),
-	transaction_type: mysqlEnum('transaction_type', ['e-wallet', 'cash', 'card']).notNull()
+	transaction_type: mysqlEnum('transaction_type', ['e-wallet', 'cash', 'card']).notNull(),
+	payment_status: mysqlEnum('payment_status', ['valid', 'void']).notNull()
 });
 
 // ingredients Table
@@ -48,7 +49,8 @@ export const locations = mysqlTable('locations', {
 	location_id: int('location_id').primaryKey().autoincrement().notNull(),
 	name: varchar('name', { length: 256 }).notNull(),
 	street: varchar('street', { length: 256 }).notNull(),
-	city: varchar('city', { length: 256 }).notNull()
+	city: varchar('city', { length: 256 }).notNull(),
+	location_status: mysqlEnum('location_status', ['active', 'inactive']).notNull()
 });
 
 // JUNCTION TABLES
@@ -82,5 +84,3 @@ export const product_orders = mysqlTable(
 	},
 	(table) => [primaryKey({ columns: [table.product_id, table.order_id] })]
 );
-
-// RELATIONS (TODO)
