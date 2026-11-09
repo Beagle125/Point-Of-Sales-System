@@ -15,7 +15,13 @@
 	let ingredient_list: Ingredient[] = $state([]);
 
 	onMount(async () => {
-		let response = await fetch('/api/ingredients', { method: 'GET' });
+		let response = await fetch('/api/ingredients', {
+			method: 'QUERY',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({
+				products: [].map(Number)
+			})
+		});
 		ingredient_list = (await response.json()).data;
 	});
 
