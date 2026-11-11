@@ -1,0 +1,1 @@
+ALTER TABLE `payments` RENAME COLUMN `payment_status` TO `payment_validity`;

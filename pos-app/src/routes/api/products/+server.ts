@@ -5,7 +5,6 @@ import type { RequestHandler } from '@sveltejs/kit';
 import { json } from '@sveltejs/kit';
 import Ajv from 'ajv';
 import type { JSONSchemaType } from 'ajv';
-import { create } from 'domain';
 import { eq, inArray } from 'drizzle-orm';
 
 export const POST: RequestHandler = async ({ request }) => {

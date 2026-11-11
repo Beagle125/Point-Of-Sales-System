@@ -75,7 +75,7 @@ export const PUT: RequestHandler = async ({ params, request }) => {
 		.set({ name: body.name, unit_price: body.unit_price })
 		.where(eq(products.product_id, productId));
 
-	if (body.ingredients) {
+	if (body.ingredients && body.ingredients.length > 0) {
 		let ingredient_arr: number[] = body.ingredients;
 
 		// delete existing records

@@ -109,8 +109,6 @@ export const GET: RequestHandler = async (url) => {
 			.from(locations)
 			.where(eq(locations.location_status, 'active'));
 
-		console.log(city_arr);
-
 		return json({ status: 'success', data: city_arr });
 	} catch (error) {
 		return json({ status: 'error', message: 'failed to get the locations' }, { status: 500 });
