@@ -15,17 +15,17 @@ export const DELETE: RequestHandler = async ({ params }) => {
 	}
 
 	const location = await db.query.locations.findFirst({
-		where: and(eq(locations.location_id, locationId), eq(locations.location_status, 'active')),
+		where: and(eq(locations.location_id, locationId), eq(locations.location_validity, 'valid')),
 		columns: { location_id: true }
 	});
 
 	if (!location) {
-		return json({ error: 'Location not found.' }, { status: 404 });
+		return json({ error: 'Location id not found or was deleted.' }, { status: 404 });
 	}
 
 	await db
 		.update(locations)
-		.set({ location_status: 'inactive' })
+		.set({ location_validity: 'void' })
 		.where(eq(locations.location_id, locationId));
 	return json({ success: true });
 };
@@ -66,10 +66,19 @@ export const PUT: RequestHandler = async ({ params, request }) => {
 
 	const locationId = Number(params.id);
 
+	if (
+		!(await db.query.locations.findFirst({
+			where: and(eq(locations.location_id, locationId), eq(locations.location_validity, 'valid')),
+			columns: { location_id: true }
+		}))
+	) {
+		return json({ error: 'Specified location id was not found or was deleted.' }, { status: 404 });
+	}
+
 	await db
 		.update(locations)
 		.set({ name: body.name, city: body.city, street: body.street })
-		.where(and(eq(locations.location_id, locationId), eq(locations.location_status, 'active')));
+		.where(and(eq(locations.location_id, locationId), eq(locations.location_validity, 'valid')));
 
 	return json({ success: true }, { status: 201 });
 };

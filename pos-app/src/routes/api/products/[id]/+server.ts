@@ -5,7 +5,7 @@ import type { RequestHandler } from '@sveltejs/kit';
 import { json } from '@sveltejs/kit';
 import Ajv from 'ajv';
 import type { JSONSchemaType } from 'ajv';
-import { eq } from 'drizzle-orm';
+import { eq, and } from 'drizzle-orm';
 
 export const DELETE: RequestHandler = async ({ params }) => {
 	const productId = Number(params.id);
@@ -14,15 +14,18 @@ export const DELETE: RequestHandler = async ({ params }) => {
 	}
 
 	const product = await db.query.products.findFirst({
-		where: eq(products.product_id, productId),
+		where: and(eq(products.product_id, productId), eq(products.product_validity, 'valid')),
 		columns: { product_id: true }
 	});
 
 	if (!product) {
-		return json({ error: 'Product not found.' }, { status: 404 });
+		return json({ error: 'Product not found or was deleted.' }, { status: 404 });
 	}
 
-	await db.delete(products).where(eq(products.product_id, productId));
+	await db
+		.update(products)
+		.set({ product_validity: 'void' })
+		.where(eq(products.product_id, productId));
 	return json({ success: true });
 };
 
@@ -69,6 +72,15 @@ export const PUT: RequestHandler = async ({ params, request }) => {
 
 	// update the product
 	const productId = Number(params.id);
+
+	if (
+		!(await db.query.products.findFirst({
+			where: and(eq(products.product_id, productId), eq(products.product_validity, 'valid')),
+			columns: { product_id: true }
+		}))
+	) {
+		return json({ error: 'Specified product id was not found or was deleted.' }, { status: 404 });
+	}
 
 	await db
 		.update(products)

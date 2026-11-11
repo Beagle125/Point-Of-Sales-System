@@ -5,7 +5,7 @@ import type { RequestHandler } from '@sveltejs/kit';
 import { json } from '@sveltejs/kit';
 import Ajv from 'ajv';
 import type { JSONSchemaType } from 'ajv';
-import { eq, inArray } from 'drizzle-orm';
+import { eq, and, inArray } from 'drizzle-orm';
 
 export const POST: RequestHandler = async ({ request }) => {
 	let body: unknown;
@@ -37,11 +37,15 @@ export const POST: RequestHandler = async ({ request }) => {
 		return json({ error: validate.errors }, { status: 415 });
 	}
 
-	if (await db.query.ingredients.findFirst({ where: eq(ingredients.name, body.name) })) {
+	if (
+		await db.query.ingredients.findFirst({
+			where: and(eq(ingredients.name, body.name), eq(ingredients.ingredient_validity, 'valid'))
+		})
+	) {
 		return json({ error: 'Ingredient name already exists' }, { status: 415 });
 	}
 
-	await db.insert(ingredients).values({ name: body.name });
+	await db.insert(ingredients).values({ name: body.name, ingredient_validity: 'valid' });
 	return json({ success: true }, { status: 201 });
 };
 
@@ -84,9 +88,17 @@ export const QUERY: RequestHandler = async ({ url, request }) => {
 					product_ingredients,
 					eq(ingredients.ingredient_id, product_ingredients.ingredient_id)
 				)
-				.where(inArray(product_ingredients.product_id, product_arr));
+				.where(
+					and(
+						inArray(product_ingredients.product_id, product_arr),
+						eq(ingredients.ingredient_validity, 'valid')
+					)
+				);
 		} else {
-			result = await db.select().from(ingredients);
+			result = await db
+				.select()
+				.from(ingredients)
+				.where(eq(ingredients.ingredient_validity, 'valid'));
 		}
 
 		return json({ status: 'success', data: result });

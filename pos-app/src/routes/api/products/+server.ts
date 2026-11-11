@@ -5,7 +5,7 @@ import type { RequestHandler } from '@sveltejs/kit';
 import { json } from '@sveltejs/kit';
 import Ajv from 'ajv';
 import type { JSONSchemaType } from 'ajv';
-import { eq, inArray } from 'drizzle-orm';
+import { eq, and, inArray } from 'drizzle-orm';
 
 export const POST: RequestHandler = async ({ request }) => {
 	let body: unknown;
@@ -55,7 +55,7 @@ export const POST: RequestHandler = async ({ request }) => {
 
 	const [created] = await db
 		.insert(products)
-		.values({ name: body.name, unit_price: body.unit_price })
+		.values({ name: body.name, unit_price: body.unit_price, product_validity: 'valid' })
 		.$returningId();
 
 	// update the product_ingredients junction table
@@ -106,9 +106,14 @@ export const QUERY: RequestHandler = async ({ url, request }) => {
 				.select()
 				.from(products)
 				.leftJoin(product_ingredients, eq(products.product_id, product_ingredients.product_id))
-				.where(inArray(product_ingredients.ingredient_id, ingredient_arr));
+				.where(
+					and(
+						inArray(product_ingredients.ingredient_id, ingredient_arr),
+						eq(products.product_validity, 'valid')
+					)
+				);
 		} else {
-			result = await db.select().from(products);
+			result = await db.select().from(products).where(eq(products.product_validity, 'valid'));
 		}
 
 		return json({ status: 'success', data: result });

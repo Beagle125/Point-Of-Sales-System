@@ -5,7 +5,7 @@ import type { RequestHandler } from '@sveltejs/kit';
 import { json } from '@sveltejs/kit';
 import Ajv from 'ajv';
 import type { JSONSchemaType } from 'ajv';
-import { eq } from 'drizzle-orm';
+import { eq, and } from 'drizzle-orm';
 
 export const DELETE: RequestHandler = async ({ params }) => {
 	const orderId = Number(params.id);
@@ -13,16 +13,16 @@ export const DELETE: RequestHandler = async ({ params }) => {
 		return json({ error: 'Invalid order ID.' }, { status: 400 });
 	}
 
-	const order = await db.query.orders.findFirst({
-		where: eq(orders.order_id, orderId),
-		columns: { order_id: true }
-	});
-
-	if (!order) {
-		return json({ error: 'Order not found.' }, { status: 404 });
+	if (
+		!(await db.query.orders.findFirst({
+			where: and(eq(orders.order_id, orderId), eq(orders.order_validity, 'valid')),
+			columns: { order_id: true }
+		}))
+	) {
+		return json({ error: 'Order not found or was deleted.' }, { status: 404 });
 	}
 
-	await db.delete(orders).where(eq(orders.order_id, orderId));
+	await db.update(orders).set({ order_validity: 'void' }).where(eq(orders.order_id, orderId));
 	return json({ success: true });
 };
 
@@ -72,13 +72,21 @@ export const PUT: RequestHandler = async ({ params, request }) => {
 
 	const orderId = Number(params.id);
 
+	if (
+		!(await db.query.orders.findFirst({
+			where: and(eq(orders.order_id, orderId), eq(orders.order_validity, 'valid')),
+			columns: { order_id: true }
+		}))
+	) {
+		return json({ error: 'Specified order id was not found or was deleted.' }, { status: 404 });
+	}
+
 	await db
 		.update(orders)
 		.set({ location_id: body.location_id })
 		.where(eq(orders.order_id, orderId));
 
 	// update products junction
-
 	if (body.product_arr && body.product_arr.length > 0) {
 		await db.delete(product_orders).where(eq(product_orders.order_id, orderId));
 

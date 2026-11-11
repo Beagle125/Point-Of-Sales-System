@@ -43,7 +43,7 @@ export const POST: RequestHandler = async ({ request }) => {
 
 	if (
 		await db.query.locations.findFirst({
-			where: and(eq(locations.name, body.name), eq(locations.location_status, 'active'))
+			where: and(eq(locations.name, body.name), eq(locations.location_validity, 'valid'))
 		})
 	) {
 		return json({ error: 'Location name already exists' }, { status: 415 });
@@ -51,7 +51,7 @@ export const POST: RequestHandler = async ({ request }) => {
 
 	await db
 		.insert(locations)
-		.values({ name: body.name, city: body.city, street: body.street, location_status: 'active' });
+		.values({ name: body.name, city: body.city, street: body.street, location_validity: 'valid' });
 	return json({ success: true }, { status: 201 });
 };
 
@@ -90,9 +90,9 @@ export const QUERY: RequestHandler = async ({ url, request }) => {
 			result = await db
 				.select()
 				.from(locations)
-				.where(and(inArray(locations.city, city_arr), eq(locations.location_status, 'active')));
+				.where(and(inArray(locations.city, city_arr), eq(locations.location_validity, 'valid')));
 		} else {
-			result = await db.select().from(locations).where(eq(locations.location_status, 'active'));
+			result = await db.select().from(locations).where(eq(locations.location_validity, 'valid'));
 		}
 
 		return json({ status: 'success', data: result });
@@ -107,7 +107,7 @@ export const GET: RequestHandler = async (url) => {
 		let city_arr = await db
 			.selectDistinct({ city: locations.city })
 			.from(locations)
-			.where(eq(locations.location_status, 'active'));
+			.where(eq(locations.location_validity, 'valid'));
 
 		return json({ status: 'success', data: city_arr });
 	} catch (error) {

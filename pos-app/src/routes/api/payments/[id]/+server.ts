@@ -19,7 +19,7 @@ export const DELETE: RequestHandler = async ({ params }) => {
 	});
 
 	if (!payment) {
-		return json({ error: 'Payment not found.' }, { status: 404 });
+		return json({ error: 'Payment not found or was deleted.' }, { status: 404 });
 	}
 
 	await db
@@ -76,6 +76,15 @@ export const PUT: RequestHandler = async ({ params, request }) => {
 	// ajv validation
 	if (!validate(body)) {
 		return json({ error: validate.errors }, { status: 415 });
+	}
+
+	if (
+		!(await db.query.payments.findFirst({
+			where: and(eq(payments.payment_id, paymentId), eq(payments.payment_validity, 'valid')),
+			columns: { payment_id: true }
+		}))
+	) {
+		return json({ error: 'Specified payment id was not found or was deleted.' }, { status: 404 });
 	}
 
 	// update the product

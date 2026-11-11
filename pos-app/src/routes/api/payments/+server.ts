@@ -50,7 +50,7 @@ export const POST: RequestHandler = async ({ request }) => {
 	}
 
 	if (!(await db.query.orders.findFirst({ where: eq(orders.order_id, body.order_id) }))) {
-		return json({ error: 'Order ID does not exist' }, { status: 415 });
+		return json({ error: 'payment ID does not exist' }, { status: 415 });
 	}
 
 	await db.insert(payments).values({
