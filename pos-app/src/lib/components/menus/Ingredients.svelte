@@ -5,6 +5,26 @@
 </script>
 
 <script lang="ts">
+	import { onMount } from 'svelte';
+
+	interface Product {
+		product_id: number;
+		name: string;
+	}
+
+	let product_list: Product[] = $state([]);
+
+	onMount(async () => {
+		let response = await fetch('/api/products', {
+			method: 'QUERY',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({
+				ingredients: [].map(Number)
+			})
+		});
+		product_list = (await response.json()).data;
+	});
+
 	async function createIngredient(event: SubmitEvent) {
 		event.preventDefault();
 
@@ -80,8 +100,15 @@
 
 	async function getIngredient(event: SubmitEvent) {
 		event.preventDefault();
+		const form = event.currentTarget as HTMLFormElement;
+		const data = new FormData(form);
+
 		const response = await fetch('/api/ingredients', {
-			method: 'GET'
+			method: 'QUERY',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({
+				products: data.getAll('products[]').map(Number)
+			})
 		});
 
 		const result = await response.json();
@@ -91,6 +118,8 @@
 			// Show bad stuff here...
 			return;
 		}
+
+		form.reset();
 	}
 </script>
 
@@ -122,6 +151,12 @@
 	<button type="submit">update ingredient</button>
 </form>
 
-<form action="GET" onsubmit={getIngredient}>
-	<button type="submit">Get Ingredient</button>
+<form action="QUERY" onsubmit={getIngredient}>
+	{#each product_list as product}
+		<label>
+			<input type="checkbox" name="products[]" value={product.product_id} />
+			{product.name}
+		</label>
+	{/each}
+	<button type="submit">Get Ingredients</button>
 </form>

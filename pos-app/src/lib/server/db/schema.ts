@@ -12,7 +12,8 @@ import {
 export const products = mysqlTable('products', {
 	product_id: int('product_id').primaryKey().autoincrement().notNull(),
 	name: varchar('name', { length: 256 }).notNull(),
-	unit_price: decimal('unit_price', { precision: 19, scale: 4 }).notNull()
+	unit_price: decimal('unit_price', { precision: 19, scale: 4 }).notNull(),
+	product_validity: mysqlEnum('product_validity', ['valid', 'void']).notNull()
 });
 
 // orders Table
@@ -21,7 +22,8 @@ export const orders = mysqlTable('orders', {
 	location_id: int('location_id')
 		.references(() => locations.location_id)
 		.notNull(),
-	order_date: datetime('order_date').notNull()
+	order_date: datetime('order_date').notNull(),
+	order_validity: mysqlEnum('order_validity', ['valid', 'void']).notNull()
 });
 
 // payments Table
@@ -34,13 +36,15 @@ export const payments = mysqlTable('payments', {
 		})
 		.notNull(),
 	amount: decimal('amount', { precision: 19, scale: 4 }).notNull(),
-	transaction_type: mysqlEnum('transaction_type', ['e-wallet', 'cash', 'card']).notNull()
+	transaction_type: mysqlEnum('transaction_type', ['e-wallet', 'cash', 'card']).notNull(),
+	payment_validity: mysqlEnum('payment_validity', ['valid', 'void']).notNull()
 });
 
 // ingredients Table
 export const ingredients = mysqlTable('ingredients', {
 	ingredient_id: int('ingredient_id').primaryKey().autoincrement().notNull(),
-	name: varchar('name', { length: 256 }).notNull()
+	name: varchar('name', { length: 256 }).notNull(),
+	ingredient_validity: mysqlEnum('ingredient_validity', ['valid', 'void']).notNull()
 });
 
 // locations Table
@@ -48,7 +52,8 @@ export const locations = mysqlTable('locations', {
 	location_id: int('location_id').primaryKey().autoincrement().notNull(),
 	name: varchar('name', { length: 256 }).notNull(),
 	street: varchar('street', { length: 256 }).notNull(),
-	city: varchar('city', { length: 256 }).notNull()
+	city: varchar('city', { length: 256 }).notNull(),
+	location_validity: mysqlEnum('location_validity', ['void', 'valid']).notNull()
 });
 
 // JUNCTION TABLES
@@ -82,5 +87,3 @@ export const product_orders = mysqlTable(
 	},
 	(table) => [primaryKey({ columns: [table.product_id, table.order_id] })]
 );
-
-// RELATIONS (TODO)

@@ -5,7 +5,7 @@ import type { RequestHandler } from '@sveltejs/kit';
 import { json } from '@sveltejs/kit';
 import Ajv from 'ajv';
 import type { JSONSchemaType } from 'ajv';
-import { eq } from 'drizzle-orm';
+import { eq, and } from 'drizzle-orm';
 
 export const DELETE: RequestHandler = async ({ params }) => {
 	const ingredientId = Number(params.id);
@@ -15,15 +15,21 @@ export const DELETE: RequestHandler = async ({ params }) => {
 	}
 
 	const ingredient = await db.query.ingredients.findFirst({
-		where: eq(ingredients.ingredient_id, ingredientId),
+		where: and(
+			eq(ingredients.ingredient_id, ingredientId),
+			eq(ingredients.ingredient_validity, 'valid')
+		),
 		columns: { ingredient_id: true }
 	});
 
 	if (!ingredient) {
-		return json({ error: 'Ingredient not found.' }, { status: 404 });
+		return json({ error: 'Ingredient not found or was deleted.' }, { status: 404 });
 	}
 
-	await db.delete(ingredients).where(eq(ingredients.ingredient_id, ingredientId));
+	await db
+		.update(ingredients)
+		.set({ ingredient_validity: 'void' })
+		.where(eq(ingredients.ingredient_id, ingredientId));
 	return json({ success: true });
 };
 
@@ -58,6 +64,21 @@ export const PUT: RequestHandler = async ({ params, request }) => {
 	}
 
 	const ingredientId = Number(params.id);
+
+	if (
+		!(await db.query.ingredients.findFirst({
+			where: and(
+				eq(ingredients.ingredient_id, ingredientId),
+				eq(ingredients.ingredient_validity, 'valid')
+			),
+			columns: { ingredient_id: true }
+		}))
+	) {
+		return json(
+			{ error: 'Specified ingredient id was not found or was deleted.' },
+			{ status: 404 }
+		);
+	}
 
 	await db
 		.update(ingredients)
