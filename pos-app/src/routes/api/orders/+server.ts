@@ -1,5 +1,5 @@
 import { db } from '#lib/server/db/index.ts';
-import { orders, product_orders, products } from '#lib/server/db/schema.ts';
+import { orders, product_orders, products, payments } from '#lib/server/db/schema.ts';
 
 import type { RequestHandler } from '@sveltejs/kit';
 import { json } from '@sveltejs/kit';
@@ -16,15 +16,17 @@ export const POST: RequestHandler = async ({ request }) => {
 		quantity: number;
 	}
 
-	interface PaymentRecord {
-		amount: number;
-		transaction_type: string;
+	enum TransactionType {
+		EWALLET = 'e-wallet',
+		CASH = 'cash',
+		CARD = 'card'
 	}
 
 	interface MyData {
 		location_id: number;
 		product_arr: ProductRecord[];
-		payment_arr?: PaymentRecord[];
+		payment_amount?: string;
+		transaction_type?: TransactionType;
 	}
 
 	const schema: JSONSchemaType<MyData> = {
@@ -40,16 +42,8 @@ export const POST: RequestHandler = async ({ request }) => {
 					additionalProperties: false
 				}
 			},
-			payment_arr: {
-				type: 'array',
-				nullable: true,
-				items: {
-					type: 'object',
-					properties: { amount: { type: 'number' }, transaction_type: { type: 'string' } },
-					required: ['amount', 'transaction_type'],
-					additionalProperties: false
-				}
-			}
+			payment_amount: { type: 'string', pattern: '^-?\\d+(\\.\\d+)?$', nullable: true },
+			transaction_type: { type: 'string', pattern: '^(?!\\s*$).+', nullable: true }
 		},
 		required: ['location_id', 'product_arr'],
 		additionalProperties: false
@@ -108,7 +102,14 @@ export const POST: RequestHandler = async ({ request }) => {
 		}))
 	);
 
-	// TODO add payments adding here
+	if (body.payment_amount && body.transaction_type) {
+		await db.insert(payments).values({
+			order_id: created.order_id,
+			amount: body.payment_amount,
+			transaction_type: body.transaction_type,
+			payment_validity: 'valid'
+		});
+	}
 
 	return json({ success: true }, { status: 201 });
 };

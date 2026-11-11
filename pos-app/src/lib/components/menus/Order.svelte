@@ -68,15 +68,31 @@
 			return;
 		}
 
-		const response = await fetch('/api/orders', {
-			method: 'POST',
-			headers: { 'Content-Type': 'application/json' },
-			body: JSON.stringify({
-				location_id: Number(data.get('location')),
-				product_arr: product_arr,
-				payment_arr: [] // TODO update this
-			})
-		});
+		let response;
+
+		if (data.get('has_payment')) {
+			response = await fetch('/api/orders', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({
+					location_id: Number(data.get('location')),
+					product_arr: product_arr,
+					payment_amount: data.get('payment_amount'),
+					transaction_type: data.get('transaction_type')
+				})
+			});
+		} else {
+			response = await fetch('/api/orders', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({
+					location_id: Number(data.get('location')),
+					product_arr: product_arr,
+					payment_amount: null,
+					transaction_type: null
+				})
+			});
+		}
 
 		const result = await response.json();
 		console.log(result);
@@ -133,8 +149,7 @@
 			headers: { 'Content-Type': 'application/json' },
 			body: JSON.stringify({
 				location_id: Number(data.get('location')),
-				product_arr: product_arr,
-				payment_arr: [] // TODO update this
+				product_arr: product_arr
 			})
 		});
 
@@ -210,6 +225,16 @@
 			<br />
 		{/each}
 	</fieldset>
+	<label>
+		Enter Optional Payment
+		<input type="checkbox" name="has_payment" />Add payment<br />
+		<input type="number" name="payment_amount" min="0" step="0.0001" />
+		<select name="transaction_type" id="transaction_type">
+			<option value="e-wallet">e-wallet</option>
+			<option value="cash">cash</option>
+			<option value="card">card</option>
+		</select>
+	</label>
 	<button type="submit">Place Order</button>
 </form>
 

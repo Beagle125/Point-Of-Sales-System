@@ -35,15 +35,9 @@ export const PUT: RequestHandler = async ({ params, request }) => {
 		quantity: number;
 	}
 
-	interface PaymentRecord {
-		amount: number;
-		transaction_type: string;
-	}
-
 	interface MyData {
 		location_id: number;
 		product_arr?: ProductRecord[];
-		payment_arr?: PaymentRecord[];
 	}
 
 	const schema: JSONSchemaType<MyData> = {
@@ -57,16 +51,6 @@ export const PUT: RequestHandler = async ({ params, request }) => {
 					type: 'object',
 					properties: { product_id: { type: 'number' }, quantity: { type: 'number' } },
 					required: ['product_id', 'quantity'],
-					additionalProperties: false
-				}
-			},
-			payment_arr: {
-				type: 'array',
-				nullable: true,
-				items: {
-					type: 'object',
-					properties: { amount: { type: 'number' }, transaction_type: { type: 'string' } },
-					required: ['amount', 'transaction_type'],
 					additionalProperties: false
 				}
 			}
@@ -130,8 +114,6 @@ export const PUT: RequestHandler = async ({ params, request }) => {
 			}))
 		);
 	}
-
-	// TODO update the payments
 
 	return json({ success: true }, { status: 201 });
 };
