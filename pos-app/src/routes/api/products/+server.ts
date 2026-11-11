@@ -21,7 +21,7 @@ export const POST: RequestHandler = async ({ request }) => {
 		type: 'object',
 		properties: {
 			name: { type: 'string', pattern: '^(?!\\s*$).+' },
-			unit_price: { type: 'string', pattern: '^(?!\\s*$).+' },
+			unit_price: { type: 'string', pattern: '^-?\\d+(\\.\\d+)?$' },
 
 			ingredients: {
 				type: 'array',

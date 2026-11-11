@@ -35,7 +35,7 @@ export const payments = mysqlTable('payments', {
 		.notNull(),
 	amount: decimal('amount', { precision: 19, scale: 4 }).notNull(),
 	transaction_type: mysqlEnum('transaction_type', ['e-wallet', 'cash', 'card']).notNull(),
-	payment_status: mysqlEnum('payment_validity', ['valid', 'void']).notNull()
+	payment_validity: mysqlEnum('payment_validity', ['valid', 'void']).notNull()
 });
 
 // ingredients Table

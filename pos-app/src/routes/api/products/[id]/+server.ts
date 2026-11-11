@@ -41,7 +41,7 @@ export const PUT: RequestHandler = async ({ params, request }) => {
 		type: 'object',
 		properties: {
 			name: { type: 'string', pattern: '^(?!\\s*$).+' },
-			unit_price: { type: 'string', pattern: '^(?!\\s*$).+' },
+			unit_price: { type: 'string', pattern: '^-?\\d+(\\.\\d+)?$' },
 
 			ingredients: {
 				type: 'array',
